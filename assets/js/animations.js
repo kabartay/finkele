@@ -23,6 +23,7 @@ class AnimationController {
         this.initCounterAnimations();
         this.initScrollAnimations();
         this.initHoverEffects();
+        this.initClimateGlobe();
     }
 
     /**
@@ -114,6 +115,77 @@ class AnimationController {
             }, { threshold: 0.5 });
             
             observer.observe(counter);
+        });
+    }
+
+    /**
+     * Initialize Climate Globe (Three.js)
+     */
+    initClimateGlobe() {
+        const container = document.getElementById('climate-globe');
+        if (!container || typeof THREE === 'undefined') {
+            console.warn('Climate globe container not found or Three.js not loaded');
+            return;
+        }
+        
+        const width = container.offsetWidth || 500;
+        const height = container.offsetHeight || 500;
+        
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+        camera.position.z = 2.5;
+        
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(width, height);
+        renderer.setClearColor(0x000000, 0);
+        container.appendChild(renderer.domElement);
+        
+        // Globe geometry
+        const globeGeometry = new THREE.SphereGeometry(1, 32, 32);
+        const globeMaterial = new THREE.MeshPhongMaterial({
+            color: 0x22c55e,
+            emissive: 0x22c55e,
+            emissiveIntensity: 0.1,
+            shininess: 100
+        });
+        
+        const globe = new THREE.Mesh(globeGeometry, globeMaterial);
+        scene.add(globe);
+        
+        // Wireframe overlay
+        const wireframeGeometry = new THREE.SphereGeometry(1.01, 16, 16);
+        const wireframeMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ff88,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.15
+        });
+        const wireframe = new THREE.Mesh(wireframeGeometry, wireframeMaterial);
+        scene.add(wireframe);
+        
+        // Lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        const pointLight = new THREE.PointLight(0xffffff, 0.8);
+        pointLight.position.set(2, 2, 2);
+        scene.add(pointLight);
+        
+        // Animation
+        function animate() {
+            requestAnimationFrame(animate);
+            globe.rotation.y += 0.003;
+            wireframe.rotation.y += 0.003;
+            renderer.render(scene, camera);
+        }
+        animate();
+        
+        // Handle resize
+        window.addEventListener('resize', () => {
+            const newWidth = container.offsetWidth;
+            const newHeight = container.offsetHeight;
+            camera.aspect = newWidth / newHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(newWidth, newHeight);
         });
     }
 
